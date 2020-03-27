@@ -18,28 +18,29 @@ use Psr\Http\Message\ResponseInterface;
  * Class TestTransactionDestruct
  * @package GuzabaPlatform\Tests\Controllers
  *
+ * Tests are the transactions destroyed when the master transaction is committed or rolled back and the reference to it ceases to exist.
+ *
  * The tests are done on a database transaction
+ *
  */
 class TestTransactionDestruct extends BaseTestController
 {
 
     protected const CONFIG_DEFAULTS = [
         'routes'        => [
-            '/test/transaction/destruct'                        => [
+            '/tests/transaction/destruct'                        => [
                 Method::HTTP_PUT                                           => [self::class, 'test_destruct'],
             ],
-            '/test/transaction/nested/destruct'                 => [
+            '/tests/transaction/nested/destruct'                 => [
                 Method::HTTP_PUT                                           => [self::class, 'test_nested_destruct'],
             ],
-            '/test/transaction/multiple/nested/destruct'        => [
+            '/tests/transaction/multiple/nested/destruct'        => [
                 Method::HTTP_PUT                                           => [self::class, 'test_multiple_nested_destruct'],
             ],
         ],
         'services' => [
             'ConnectionFactory',
-            'OrmStore',
         ]
-
     ];
 
     protected const CONFIG_RUNTIME = [];
@@ -153,7 +154,6 @@ class TestTransactionDestruct extends BaseTestController
         });
         $Transaction->begin();
         $this->nested_transaction($struct, $nested_message_position);
-        //$this->nested_transaction();
         $Transaction->commit();
     }
 }
