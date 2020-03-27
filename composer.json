@@ -1,0 +1,31 @@
+{
+    "name": "guzaba-platform/guzaba-platform-tests",
+    "type": "guzaba-platform-component",
+    "description": "GuzabaPlatform Tests",
+    "keywords": ["tests", "automated tests", "api tests"],
+    "homepage": "https://github.com/AzonMedia/guzaba-platform-tests",
+    "license": "BSD-3-Clause",
+    "minimum-stability": "dev",
+    "authors": [
+        {
+            "name": "Vesko Kenashkov",
+            "email": "kenashkov@azonmedia.com",
+            "homepage": "http://azonmedia.com",
+            "role": "Developer"
+        }
+    ],
+    "require": {
+        "composer/composer": "^1.3",
+        "guzaba-platform/guzaba-platform-installer": "dev-master",
+        "guzaba-platform/components-base": "dev-master",
+        "guzaba-platform/guzaba-platform": "dev-master"
+    },
+    "require-dev": {
+        "composer/composer": "^1.3"
+    },
+    "autoload": {
+        "psr-4": {
+            "GuzabaPlatform\\Tests\\": "app/src/"
+        }
+    }
+}
