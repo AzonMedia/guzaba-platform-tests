@@ -63,7 +63,6 @@ class TestTransactionRollbackReason extends BaseTestController
             /** @var \Guzaba2\Database\Transaction $Transaction */
             $Transaction = $Event->get_subject();
             $rollback_reason = $Transaction->get_rollback_reason();
-            print $rollback_reason;
             if ($rollback_reason === $Transaction::ROLLBACK_REASON['IMPLICIT']) {
                 $struct['events'][1] = 'rollback reason is IMPLICIT';
             }
@@ -88,7 +87,6 @@ class TestTransactionRollbackReason extends BaseTestController
             /** @var \Guzaba2\Database\Transaction $Transaction */
             $Transaction = $Event->get_subject();
             $rollback_reason = $Transaction->get_rollback_reason();
-            print $rollback_reason;
             if ($rollback_reason === $Transaction::ROLLBACK_REASON['IMPLICIT']) {
                 $struct['events'][1] = 'rollback reason is IMPLICIT';
             }
@@ -99,10 +97,27 @@ class TestTransactionRollbackReason extends BaseTestController
 
     public function test_explicit_rollback(): ResponseInterface
     {
-
+        /** @var \Guzaba2\Database\Transaction $Transaction */
+        $Transaction = self::get_service('ConnectionFactory')->get_connection(MysqlConnectionCoroutine::class, $CR)->new_transaction($TR);
+        $Transaction->add_callback('_before_rollback', function(Event $Event) use (&$struct): void {
+            //the rollback reason is set before the _before_rollback event is fired
+            /** @var \Guzaba2\Database\Transaction $Transaction */
+            $Transaction = $Event->get_subject();
+            $rollback_reason = $Transaction->get_rollback_reason();
+            if ($rollback_reason === $Transaction::ROLLBACK_REASON['EXPLICIT']) {
+                $struct['events'][1] = 'rollback reason is IMPLICIT';
+            }
+        });
+        $Transaction->begin();
+        $Transaction->rollback();
     }
 
     public function test_exception_rollback(): ResponseInterface
+    {
+
+    }
+
+    protected function exception_rollback(): void
     {
 
     }
