@@ -4,6 +4,8 @@ declare(strict_types=1);
 namespace GuzabaPlatform\Tests\Controllers;
 
 
+use Guzaba2\Base\Exceptions\BaseException;
+use Guzaba2\Base\Exceptions\RunTimeException;
 use Guzaba2\Database\Interfaces\ConnectionInterface;
 use Guzaba2\Http\Method;
 use Guzaba2\Transaction\Transaction;
@@ -30,6 +32,9 @@ class TestTransactionRollbackReason extends BaseTestController
             ],
             '/tests/transaction/rollback/reason/explicit'                   => [
                 Method::HTTP_PUT                                                => [self::class, 'test_explicit_rollback'],
+            ],
+            '/tests/transaction/rollback/reason/exception/base'             => [
+                Method::HTTP_PUT                                                => [self::class, 'test_base_exception_rollback'],
             ],
             '/tests/transaction/rollback/reason/exception'                  => [
                 Method::HTTP_PUT                                                => [self::class, 'test_exception_rollback'],
@@ -112,14 +117,74 @@ class TestTransactionRollbackReason extends BaseTestController
         $Transaction->rollback();
     }
 
-    public function test_exception_rollback(): ResponseInterface
+    public function test_base_exception_rollback(): ResponseInterface
     {
-
+        $struct = ['total_events' => 2];
+        $struct['events'] = [];
+        try {
+            $this->base_exception_rollback($struct);
+        } catch (RunTimeException $Exception) {
+            //ignore the exception
+        }
+        return self::get_test_response($struct);
     }
 
-    protected function exception_rollback(): void
+    protected function base_exception_rollback(&$struct): void
     {
+        /** @var \Guzaba2\Database\Transaction $Transaction */
+        $Transaction = self::get_service('ConnectionFactory')->get_connection(MysqlConnectionCoroutine::class, $CR)->new_transaction($TR);
+        $Transaction->add_callback('_before_rollback', function(Event $Event) use (&$struct): void {
+            //the rollback reason is set before the _before_rollback event is fired
+            /** @var \Guzaba2\Database\Transaction $Transaction */
+            $Transaction = $Event->get_subject();
+            $rollback_reason = $Transaction->get_rollback_reason();
+            if ($rollback_reason === $Transaction::ROLLBACK_REASON['EXCEPTION']) {
+                $struct['events'][1] = 'rollback reason is EXCEPTION';
+            }
+            if ($Exception = $Transaction->get_interrupting_exception()) {
+                $struct['events'][2] = 'there is interrupting exception';
+            }
+        });
+        $Transaction->begin();
+        //for the purpose of the test it is important to throw an exception that extends BaseException
+        throw new RunTimeException('test exception');
+        $Transaction->commit();
+    }
 
+
+    public function test_exception_rollback(): ResponseInterface
+    {
+        $struct = ['total_events' => 2];
+        $struct['events'] = [];
+        try {
+            $this->exception_rollback($struct);
+        } catch (\Exception $Exception) {
+            //ignore the exception
+        }
+        return self::get_test_response($struct);
+    }
+
+    protected function exception_rollback(&$struct): void
+    {
+        /** @var \Guzaba2\Database\Transaction $Transaction */
+        $Transaction = self::get_service('ConnectionFactory')->get_connection(MysqlConnectionCoroutine::class, $CR)->new_transaction($TR);
+        $Transaction->add_callback('_before_rollback', function(Event $Event) use (&$struct): void {
+
+            //the rollback reason is set before the _before_rollback event is fired
+            /** @var \Guzaba2\Database\Transaction $Transaction */
+            $Transaction = $Event->get_subject();
+            $rollback_reason = $Transaction->get_rollback_reason();
+            if ($rollback_reason === $Transaction::ROLLBACK_REASON['EXCEPTION']) {
+                $struct['events'][1] = 'rollback reason is EXCEPTION';
+            }
+            if (!($Exception = $Transaction->get_interrupting_exception())) {
+                $struct['events'][2] = 'there is NO interrupting exception available (due to exception thrown not extending BaseException)';
+            }
+        });
+        $Transaction->begin();
+        //for the purpose of the test it is important to throw an exception that DOES NOT inherit BaseException
+        throw new \Exception('test exception');
+        $Transaction->commit();
     }
 
     public function test_parent_rollback(): ResponseInterface
