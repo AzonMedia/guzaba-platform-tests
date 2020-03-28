@@ -102,6 +102,8 @@ class TestTransactionRollbackReason extends BaseTestController
 
     public function test_explicit_rollback(): ResponseInterface
     {
+        $struct = ['total_events' => 1];
+        $struct['events'] = [];
         /** @var \Guzaba2\Database\Transaction $Transaction */
         $Transaction = self::get_service('ConnectionFactory')->get_connection(MysqlConnectionCoroutine::class, $CR)->new_transaction($TR);
         $Transaction->add_callback('_before_rollback', function(Event $Event) use (&$struct): void {
@@ -110,11 +112,12 @@ class TestTransactionRollbackReason extends BaseTestController
             $Transaction = $Event->get_subject();
             $rollback_reason = $Transaction->get_rollback_reason();
             if ($rollback_reason === $Transaction::ROLLBACK_REASON['EXPLICIT']) {
-                $struct['events'][1] = 'rollback reason is IMPLICIT';
+                $struct['events'][1] = 'rollback reason is EXPLICIT';
             }
         });
         $Transaction->begin();
         $Transaction->rollback();
+        return self::get_test_response($struct);
     }
 
     public function test_base_exception_rollback(): ResponseInterface
@@ -189,7 +192,40 @@ class TestTransactionRollbackReason extends BaseTestController
 
     public function test_parent_rollback(): ResponseInterface
     {
+        $struct = ['total_events' => 2];
+        $struct['events'] = [];
+        /** @var \Guzaba2\Database\Transaction $Transaction */
+        $Transaction = self::get_service('ConnectionFactory')->get_connection(MysqlConnectionCoroutine::class, $CR)->new_transaction($TR);
+        $Transaction->add_callback('_before_rollback', function(Event $Event) use (&$struct): void {
+            //the rollback reason is set before the _before_rollback event is fired
+            /** @var \Guzaba2\Database\Transaction $Transaction */
+            $Transaction = $Event->get_subject();
+            $rollback_reason = $Transaction->get_rollback_reason();
+            if ($rollback_reason === $Transaction::ROLLBACK_REASON['EXPLICIT']) {
+                $struct['events'][2] = 'master transaction rollback reason is EXPLICIT';
+            }
+        });
+        $Transaction->begin();
+        $this->parent_rollback($struct);
+        $Transaction->rollback();
+        return self::get_test_response($struct);
+    }
 
+    protected function parent_rollback(array &$struct): void
+    {
+        /** @var \Guzaba2\Database\Transaction $Transaction */
+        $Transaction = self::get_service('ConnectionFactory')->get_connection(MysqlConnectionCoroutine::class, $CR)->new_transaction($TR);
+        $Transaction->add_callback('_before_rollback', function(Event $Event) use (&$struct): void {
+            //the rollback reason is set before the _before_rollback event is fired
+            /** @var \Guzaba2\Database\Transaction $Transaction */
+            $Transaction = $Event->get_subject();
+            $rollback_reason = $Transaction->get_rollback_reason();
+            if ($rollback_reason === $Transaction::ROLLBACK_REASON['PARENT']) {
+                $struct['events'][1] = 'nested transaction rollback reason is PARENT';
+            }
+        });
+        $Transaction->begin();
+        $Transaction->commit();
     }
 
 
