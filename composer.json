@@ -4,7 +4,7 @@
     "description": "GuzabaPlatform Tests",
     "keywords": ["tests", "automated tests", "api tests"],
     "homepage": "https://github.com/AzonMedia/guzaba-platform-tests",
-    "license": "BSD-3-Clause",
+    "license": "MIT",
     "minimum-stability": "dev",
     "authors": [
         {
