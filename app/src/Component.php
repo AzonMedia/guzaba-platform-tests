@@ -17,21 +17,11 @@ use GuzabaPlatform\RequestCaching\Hooks\AdminEntry;
 
 /**
  * Class Component
- * @package Azonmedia\Tags
+ * @package GuzabaPlatform\Tests
  */
 class Component extends BaseComponent implements ComponentInterface
 {
-
-    protected const CONFIG_DEFAULTS = [
-        'services' => [
-            'Events',
-            'FrontendRouter',
-        ],
-    ];
-
-    protected const CONFIG_RUNTIME = [];
-
-    protected const COMPONENT_NAME = "Tests";
+    protected const COMPONENT_NAME = "Guzaba Platform Tests";
     //https://components.platform.guzaba.org/component/{vendor}/{component}
     protected const COMPONENT_URL = 'https://components.platform.guzaba.org/component/guzaba-platform/guzaba-platform-tests';
     //protected const DEV_COMPONENT_URL//this should come from composer.json
@@ -40,7 +30,4 @@ class Component extends BaseComponent implements ComponentInterface
     protected const VENDOR_NAME = 'Azonmedia';
     protected const VENDOR_URL = 'https://azonmedia.com';
     protected const ERROR_REFERENCE_URL = 'https://github.com/AzonMedia/guzaba-platform-tests/tree/master/docs/ErrorReference/';
-
-    private const INITIALIZATION_METHODS = ['register_middleware', 'register_routes'];
-
 }

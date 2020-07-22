@@ -120,6 +120,10 @@ class TestTransactionRollbackReason extends BaseTestController
         return self::get_test_response($struct);
     }
 
+    /**
+     * Test when Exception that extends Guzaba2\Base\Exceptions\BaseException is thrown
+     * @return ResponseInterface
+     */
     public function test_base_exception_rollback(): ResponseInterface
     {
         $struct = ['total_events' => 2];
@@ -154,7 +158,13 @@ class TestTransactionRollbackReason extends BaseTestController
         $Transaction->commit();
     }
 
-
+    /**
+     * Tests when Exception that DOES NOT extend Guzaba2\Base\Exceptions\BaseException is thrown
+     * @return ResponseInterface
+     */
+    //This test is disabled as the exception detection seems no longer possible
+    //the backtrace shows the ScopeRef to be destroyed at the function call -> $this->exception_rollback($struct)
+    // and not where the exception is thrown -> throw new \Exception('test exception');
     public function test_exception_rollback(): ResponseInterface
     {
         $struct = ['total_events' => 2];
